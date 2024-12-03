@@ -130,6 +130,8 @@ public class FrontController {
 		
 		user.setNoOfAttempts(0); // reset counter
 		
+		session.setAttribute("authenticateduser",user);
+		
 		return "view1";
 		
 		
@@ -139,6 +141,12 @@ public class FrontController {
 	public String getDisabledEntry(@ModelAttribute("disableduser") User user,Model model) {
 		model.addAttribute("user",user);
 		return "view2";
+	}
+	
+	@PostMapping("/logout")
+	public String logout(HttpSession session) {
+		session.invalidate();
+		return "view0";
 	}
 	
 	

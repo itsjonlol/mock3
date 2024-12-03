@@ -125,4 +125,8 @@ public class AuthenticationService {
 	public boolean isLocked(String username) {
 		return authenticationRepository.checkExists(username);
 	}
+	
+	public void addUser(String username) {
+		authenticationRepository.createValue(username, "authenticated");
+	}
 }
