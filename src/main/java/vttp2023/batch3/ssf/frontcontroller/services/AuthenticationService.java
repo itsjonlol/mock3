@@ -69,13 +69,15 @@ public class AuthenticationService {
 				// Handle unauthorized (invalid username/password)
 				System.out.println("Unauthorized: Invalid username or password.");
 				throw new AuthenticationException("Invalid username or password");
+			} catch (HttpClientErrorException.NotFound ex) {
+				throw new AuthenticationException("Page not found");
 			}
 		}
 
     
 	
 	public List<String> showCaptcha() {
-		List<String> operators = new ArrayList<>(Arrays.asList("+","-","/","*"));
+		List<String> operators = new ArrayList<>(Arrays.asList("+","-"));
 		List<Integer> integerList = new ArrayList<>();
 		List<String> displayCaptcha = new ArrayList<>();
 		for (int i = 0; i<50;i++) {

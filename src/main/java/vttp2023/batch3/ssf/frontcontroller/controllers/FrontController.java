@@ -30,116 +30,101 @@ public class FrontController {
 
 	// TODO: Task 2, Task 3, Task 4, Task 6
 
-	@PostMapping("/login")
-	public String loginRequest(@RequestBody MultiValueMap<String,String> form,Model model,HttpSession session,
-	RedirectAttributes redirectAttributes) throws Exception {
+	
+
+	@PostMapping("/login2")
+	public String loginRequest2(@RequestBody MultiValueMap<String,String> form,Model model,HttpSession session,RedirectAttributes 
+	redirectAttributes) throws Exception {
 		String username = form.getFirst("username");
 		String password = form.getFirst("password");
+
 		String captchaAnswer = form.getFirst("captchaAnswer");
+		Boolean failedLoginAttempt = false;
 		
-		
-		
+
 		if (username.length() < 2 || password.length()<2) {
 			String errorMessage = "Both username and password must be more than 2 characters";
 			model.addAttribute("errorMessage",errorMessage);
-			
 			return "view0";
 		}
 		
-		
-		String sessionKey = "user_" + username;
-		User user = (User) session.getAttribute(sessionKey);
-		if (user ==null) {
+		User user = (User) session.getAttribute("user");
 
+		if (user ==null) {
 			user = new User(username,0);
+			session.setAttribute("user", user);
+			
 		}
 		
-		
-		// user.setName(username);
-		System.out.println("Incorrect login attempt for " + user.getName() + user.getNoOfAttempts());
-		if (user.getNoOfAttempts()==3) {
+		// if (authenticationService.isLocked(user.getName())) {
+		// 	redirectAttributes.addFlashAttribute("disableduser", user);
+		// 	return "redirect:/disabled";
+		// }
+
+		if (user.getNoOfAttempts()==2) {
 			authenticationService.disableUser(user.getName());
 			user.setNoOfAttempts(0);
-		}
-		if (authenticationService.isLocked(user.getName())) {
-			redirectAttributes.addFlashAttribute("disableduser", user);
-			return "redirect:/disabled";
-		}
-
-
-		
-
-		
-
-		try {
-			// Get the captcha from the session
-			// List<String> storedCaptcha = (List<String>) session.getAttribute("captcha");
+			session.removeAttribute("user");
 			
-			if (captchaAnswer!=null) {
-				Object captchaObj = session.getAttribute("captcha");
-				List<String> storedCaptcha = (List<String>) captchaObj; //cannot use modelattribute cause not binded
-				
-				// if (captchaObj == null) {
-				// 	System.out.println("Captcha is null in session");
-				// } else {
-				// 	System.out.println("Captcha object type: " + captchaObj.getClass().getName());
-				// 	System.out.println("Captcha value: " + captchaObj);
-				// }
-				// System.out.println(authenticationService.isCaptchaCorrect(Integer.valueOf(captchaAnswer), storedCaptcha));
-				//first check to see if pass captcha. use a session to store the captcha
-				if (!authenticationService.isCaptchaCorrect(Integer.valueOf(captchaAnswer), storedCaptcha)) {
+		}
+
+		
+		try {
+
+			List<String> captcha = (List<String>)session.getAttribute("captcha");
+			
+			if (captchaAnswer != null) { // use the form null value
+				//when captcha fails
+				if(!authenticationService.isCaptchaCorrect(Integer.valueOf(captchaAnswer), captcha)) {
+					if (authenticationService.isLocked(user.getName())) {
+						redirectAttributes.addFlashAttribute("disableduser", user);
+						return "redirect:/disabled";
+					}
+					
 					user.setNoOfAttempts(user.getNoOfAttempts()+1);
-					session.setAttribute(sessionKey, user);
-					Boolean failedLoginAttempt = true;
-					model.addAttribute("failedLoginAttempt",failedLoginAttempt);
-					List<String> captcha = authenticationService.showCaptcha();
-					model.addAttribute("captcha",captcha);
+					List<String> newCaptcha = authenticationService.showCaptcha();
+					model.addAttribute("failedLoginAttempt",true);
+					model.addAttribute("captcha",newCaptcha);
+					session.setAttribute("captcha", newCaptcha);
 					
-					
+					model.addAttribute("errorMessage","Captcha is wrong. Attempt counter: " + user.getNoOfAttempts());
 					return "view0";
-
-				}
-				//if passed captcha, go authenticate
+				} 
+				//first attempt
 				authenticationService.authenticate(username, password);
-				
-
 			}
-			//first attempt with no captcha
+			//first try. captcha is null. go through the authentication
 			authenticationService.authenticate(username, password);
 
-			
-		} catch (AuthenticationException ex) {
-			// If authentication fails, add the error message to the model
-			//whenever you fail, add number of attempts to the user
+		} catch(AuthenticationException ex) {
+			if (authenticationService.isLocked(user.getName())) {
+				redirectAttributes.addFlashAttribute("disableduser", user);
+				return "redirect:/disabled";
+			}
 			
 			user.setNoOfAttempts(user.getNoOfAttempts()+1);
-			session.setAttribute(sessionKey, user);
-			model.addAttribute("errorMessage", ex.getMessage());
-
-			Boolean failedLoginAttempt = true;
+			model.addAttribute("errorMessage",ex.getMessage()+ " Attempt counter: " + user.getNoOfAttempts());
+			
+			failedLoginAttempt = true;
 			model.addAttribute("failedLoginAttempt",failedLoginAttempt);
 			List<String> captcha = authenticationService.showCaptcha();
 			model.addAttribute("captcha",captcha);
 			session.setAttribute("captcha", captcha);
-	
 			
 
-			return "view0"; // Return to the login page with the error message
+			return "view0";
+
 		}
-		
-		
-		user.setNoOfAttempts(0); // reset counter
-		
-		session.setAttribute("authenticateduser",user);
-		
+		failedLoginAttempt = false;
+		session.removeAttribute("captcha");
+		user.setNoOfAttempts(0);
+		session.setAttribute("authenticateduser", user);
 		return "view1";
-		
-		
 	}
 
 	@GetMapping("/disabled")
 	public String getDisabledEntry(@ModelAttribute("disableduser") User user,Model model) {
-		model.addAttribute("user",user);
+		model.addAttribute("disableduser",user);
 		return "view2";
 	}
 	
