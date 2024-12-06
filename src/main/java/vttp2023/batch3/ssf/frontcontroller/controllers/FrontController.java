@@ -83,7 +83,7 @@ public class FrontController {
 					
 					user.setNoOfAttempts(user.getNoOfAttempts()+1);
 					List<String> newCaptcha = authenticationService.showCaptcha();
-					model.addAttribute("failedLoginAttempt",true);
+					model.addAttribute("failedLoginAttempt",true); // need this to show again. dont assume it carries over
 					model.addAttribute("captcha",newCaptcha);
 					session.setAttribute("captcha", newCaptcha);
 					
