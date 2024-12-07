@@ -71,10 +71,11 @@ public class FrontController {
 		
 		try {
 
-			List<String> captcha = (List<String>)session.getAttribute("captcha");
+			// List<String> captcha = (List<String>)session.getAttribute("captcha");
 			
 			if (captchaAnswer != null) { // use the form null value
 				//when captcha fails
+				List<String> captcha = (List<String>) session.getAttribute("captcha");
 				if(!authenticationService.isCaptchaCorrect(Integer.valueOf(captchaAnswer), captcha)) {
 					if (authenticationService.isLocked(user.getName())) {
 						redirectAttributes.addFlashAttribute("disableduser", user);
@@ -85,7 +86,7 @@ public class FrontController {
 					List<String> newCaptcha = authenticationService.showCaptcha();
 					model.addAttribute("failedLoginAttempt",true); // need this to show again. dont assume it carries over
 					model.addAttribute("captcha",newCaptcha);
-					session.setAttribute("captcha", newCaptcha);
+					// session.setAttribute("captcha", newCaptcha);
 					
 					model.addAttribute("errorMessage","Captcha is wrong. Attempt counter: " + user.getNoOfAttempts());
 					return "view0";
@@ -109,7 +110,7 @@ public class FrontController {
 			model.addAttribute("failedLoginAttempt",failedLoginAttempt);
 			List<String> captcha = authenticationService.showCaptcha();
 			model.addAttribute("captcha",captcha);
-			session.setAttribute("captcha", captcha);
+			// session.setAttribute("captcha", captcha);
 			
 
 			return "view0";
@@ -121,6 +122,7 @@ public class FrontController {
 		session.setAttribute("authenticateduser", user);
 		return "view1";
 	}
+	// The Model is designed to pass data from the controller to the view in the same request. It is not a storage mechanism for data between requests, which is why attributes added to the model are null in subsequent requests. For cross-request persistence, use HttpSession or RedirectAttributes.
 
 	@GetMapping("/disabled")
 	public String getDisabledEntry(@ModelAttribute("disableduser") User user,Model model) {
