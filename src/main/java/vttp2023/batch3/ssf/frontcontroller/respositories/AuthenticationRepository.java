@@ -33,7 +33,7 @@ public class AuthenticationRepository {
         template.opsForValue().set(key, value, Duration.ofSeconds(seconds));
     }
 
-    public void expireKey(String redisKey, long seconds) {
+    public void expireKey(String redisKey, Long seconds) {
         Duration expireDuration = Duration.ofSeconds(seconds);
         template.expire(redisKey, expireDuration);
     }
