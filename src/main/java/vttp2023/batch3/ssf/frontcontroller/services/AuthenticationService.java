@@ -117,6 +117,8 @@ public class AuthenticationService {
 	// DO NOT CHANGE THE METHOD'S SIGNATURE
 	// Write an implementation to disable a user account for 30 mins
 	public void disableUser(String username) {
+		// authenticationRepository.createValue(username, "to delete");
+		// authenticationRepository.expireKey(username, 30);
 		authenticationRepository.setKeyWithTTL(username, "to delete", 30);
 
 	}
